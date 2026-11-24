@@ -6,12 +6,13 @@ import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from heapq import nsmallest
+from pathlib import Path
 from typing import Iterable, Protocol
 
 from .dataset import Document
 
 
-METHODS = ("tfidf", "bm25", "semantic")
+METHODS = ("tfidf", "bm25", "semantic", "hybrid")
 _TOKEN_PATTERN = re.compile(r"[^\W_]+(?:'[^\W_]+)*")
 
 
@@ -112,6 +113,60 @@ class BM25Index:
         return _rank(self.documents, scores.items(), k)
 
 
+def _semantic_index(documents: tuple[Document, ...], **options) -> SearchIndex:
+    from .model import ModelError
+
+    # Newer ONNX Runtime builds read their telemetry opt-out at import time.
+    os.environ.setdefault("ORT_DISABLE_TELEMETRY", "1")
+    try:
+        from .semantic import SemanticIndex
+    except ImportError as error:
+        raise ModelError("semantic search requires `python -m pip install '.[semantic]'`") from error
+    return SemanticIndex(documents, **options)
+
+
+class HybridIndex:
+    """Weighted reciprocal rank fusion of the full BM25 and MiniLM rankings."""
+
+    def __init__(
+        self,
+        documents: tuple[Document, ...],
+        *,
+        lexical_weight: float = 0.25,
+        rrf_k: int = 10,
+        k1: float = 1.2,
+        b: float = 0.75,
+        model_dir: str | Path | None = None,
+    ) -> None:
+        if not math.isfinite(lexical_weight) or not 0 <= lexical_weight <= 1:
+            raise ValueError("lexical_weight must be finite and between 0 and 1")
+        if type(rrf_k) is not int or not 0 <= rrf_k:
+            raise ValueError("rrf_k must be a non-negative integer")
+        try:
+            self.rrf_k = float(rrf_k)
+        except OverflowError as error:
+            raise ValueError("rrf_k is too large") from error
+
+        self.documents = documents
+        self.positions = {document.id: position for position, document in enumerate(documents)}
+        self.lexical = BM25Index(documents, k1=k1, b=b)
+        self.semantic = _semantic_index(documents, model_dir=model_dir) if lexical_weight < 1 else None
+        self.lexical_weight = lexical_weight
+
+    def search(self, query: str, k: int = 10) -> list[SearchResult]:
+        if k <= 0 or not self.documents or not query.strip():
+            return []
+        scores: dict[int, float] = defaultdict(float)
+        components = ((self.lexical, self.lexical_weight), (self.semantic, 1 - self.lexical_weight))
+        for index, weight in components:
+            if index is None or weight == 0:
+                continue
+            results = index.search(query, k=len(self.documents))
+            for rank, result in enumerate(results, 1):
+                scores[self.positions[result.document.id]] += weight / (self.rrf_k + rank)
+        return _rank(self.documents, scores.items(), k)
+
+
 def create_index(method: str, documents: Iterable[Document], **options) -> SearchIndex:
     """Build a reusable search index over the supplied documents."""
     if method not in METHODS:
@@ -123,13 +178,6 @@ def create_index(method: str, documents: Iterable[Document], **options) -> Searc
         return TfIdfIndex(corpus, **options)
     if method == "bm25":
         return BM25Index(corpus, **options)
-
-    from .model import ModelError
-
-    # Newer ONNX Runtime builds read their telemetry opt-out at import time.
-    os.environ.setdefault("ORT_DISABLE_TELEMETRY", "1")
-    try:
-        from .semantic import SemanticIndex
-    except ImportError as error:
-        raise ModelError("semantic search requires `python -m pip install '.[semantic]'`") from error
-    return SemanticIndex(corpus, **options)
+    if method == "semantic":
+        return _semantic_index(corpus, **options)
+    return HybridIndex(corpus, **options)

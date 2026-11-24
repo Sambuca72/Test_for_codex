@@ -2,7 +2,7 @@
 
 Each configuration runs in a new Python process. Mean latency covers a warmed
 top-10 search, including query encoding but excluding index construction, I/O
-and metrics. Peak RSS is the Linux process high-water mark through the timed
+and metrics. Peak RSS is Linux VmHWM from /proc/self/status through the timed
 searches, including the interpreter, corpus, libraries, model and index.
 """
 
@@ -12,6 +12,7 @@ import json
 import os
 import subprocess
 import sys
+from pathlib import Path
 from statistics import fmean
 from time import perf_counter_ns
 
@@ -36,9 +37,17 @@ def query_metrics(top_ids, ranked_ids, relevant_ids):
     return hits / K, hits / len(relevant_ids), reciprocal_rank
 
 
-def run(config, args):
-    import resource
+def peak_rss_mib():
+    # VmHWM covers the worker after exec. ru_maxrss may inherit a larger peak
+    # from the launcher even when the worker itself never used that memory.
+    with Path("/proc/self/status").open(encoding="ascii") as status:
+        for line in status:
+            if line.startswith("VmHWM:"):
+                return int(line.split()[1]) / 1024
+    raise OSError("Linux /proc/self/status does not report VmHWM")
 
+
+def run(config, args):
     documents = load_corpus(args.corpus)
     queries = load_queries(args.queries, split=args.split)
     if not documents or not queries:
@@ -60,7 +69,7 @@ def run(config, args):
             result = index.search(query.text, k=K)
             timings.append(perf_counter_ns() - start)
             del result
-    peak_rss_mib = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+    rss_mib = peak_rss_mib()
 
     scores = []
     for query in queries:
@@ -81,7 +90,7 @@ def run(config, args):
         "recall_at_10": f"{recall:.8f}",
         "mrr": f"{mrr:.8f}",
         "mean_search_ms": f"{fmean(timings) / 1_000_000:.6f}",
-        "peak_rss_mib": f"{peak_rss_mib:.6f}",
+        "peak_rss_mib": f"{rss_mib:.6f}",
     }
 
 
@@ -129,7 +138,7 @@ def main():
     parser.add_argument("--worker", type=parse_config, help=argparse.SUPPRESS)
     args = parser.parse_args()
     if not sys.platform.startswith("linux"):
-        parser.error("peak RSS is measured with Linux ru_maxrss")
+        parser.error("peak RSS is measured with Linux /proc/self/status VmHWM")
     if args.repeat < 1 or args.warmup < 0:
         parser.error("repeat must be at least 1 and warmup must be nonnegative")
     try:

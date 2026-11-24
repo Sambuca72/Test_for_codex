@@ -32,3 +32,13 @@ Researcher сопоставил варианты с [обзором Robertson и
 - Рекомендации по CPU и квантованию сверены с документацией Sentence Transformers. Граф ONNX выдаёт состояния токенов, поэтому пул и нормализация выполняются в Python. [Документация](https://www.sbert.net/docs/sentence_transformer/usage/efficiency.html)
 - Researcher повторно запустил квантованный CPU-граф на диагностических фразах. При повторении того же батча результаты совпали, при переходе от батча к одиночному входу немного менялись. Порядок документов и размер батча фиксируем в эксперименте.
 - Официальные файлы успешно получены по HTTPS через `/resolve/` закреплённой ревизии. Код проверяет размер и SHA-256 до установки файла в кэш, а затем повторно проверяет артефакты при чтении. [Закреплённые файлы](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/tree/855bcf54d21334332f75db10bdd48970ff0ef547)
+
+## Итерация 4. Гибрид
+
+| Источник | Что применили | Лицензия |
+| --- | --- | --- |
+| [Cormack, Clarke, Büttcher, SIGIR 2009](https://cormack.uwaterloo.ca/cormack/cormacksigir09-rrf.pdf) | Формула Reciprocal Rank Fusion и ранги с единицы. В статье использована константа 60. В эксперименте также проверяем 10 для короткого корпуса. | Авторское право ACM на статью. |
+| [Pyserini](https://github.com/castorini/pyserini/blob/master/pyserini/fusion/_base.py), [пример BM25 + DPR](https://github.com/castorini/pyserini/blob/master/docs/experiments-wiki-corpora.md) | Показано объединение лексического и плотного поиска и различие между глубиной компонентной выдачи и размером итогового top-k. | [Apache-2.0](https://github.com/castorini/pyserini/blob/master/LICENSE.txt) |
+| [LangChain EnsembleRetriever](https://github.com/langchain-ai/langchain/blob/master/libs/langchain/langchain_classic/retrievers/ensemble.py) | Сверены взвешенная формула, отсутствие вклада вне списка и сопоставление документов по стабильному идентификатору. | [MIT](https://github.com/langchain-ai/langchain/blob/master/LICENSE) |
+
+Researcher также сверил трактовку весов и глубины выдачи с документацией Elasticsearch. В проекте глубина компонентных рейтингов одинакова для любого запрошенного `k`, поэтому top-k является префиксом полного ранжирования. [Документация RRF](https://www.elastic.co/docs/reference/elasticsearch/rest-apis/reciprocal-rank-fusion), [взвешенный вариант](https://www.elastic.co/docs/reference/elasticsearch/rest-apis/retrievers/rrf-retriever)

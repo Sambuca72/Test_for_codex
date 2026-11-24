@@ -23,6 +23,8 @@ def main(argv: list[str] | None = None) -> int:
     search.add_argument("--method", choices=METHODS, default="tfidf")
     search.add_argument("--k1", type=float, help="BM25 term-frequency saturation (default: 1.2)")
     search.add_argument("--b", type=float, help="BM25 length normalization (default: 0.75)")
+    search.add_argument("--lexical-weight", type=float, help="BM25 share of hybrid fusion (default: 0.25)")
+    search.add_argument("--rrf-k", type=int, help="hybrid fusion rank offset (default: 10)")
     search.add_argument("--model-dir", help="directory containing the prepared offline model assets")
     search.add_argument("--corpus", help="path to a JSONL corpus; defaults to the bundled data")
     search.add_argument("--top-k", type=_positive_int, default=10, help="maximum number of results")
@@ -39,11 +41,19 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     options = {name: value for name, value in {"k1": args.k1, "b": args.b}.items() if value is not None}
-    if options and args.method != "bm25":
-        parser.error("--k1 and --b require --method bm25")
+    if options and args.method not in {"bm25", "hybrid"}:
+        parser.error("--k1 and --b require --method bm25 or hybrid")
+    fusion = {
+        name: value
+        for name, value in {"lexical_weight": args.lexical_weight, "rrf_k": args.rrf_k}.items()
+        if value is not None
+    }
+    if fusion and args.method != "hybrid":
+        parser.error("--lexical-weight and --rrf-k require --method hybrid")
+    options.update(fusion)
     if args.model_dir is not None:
-        if args.method != "semantic":
-            parser.error("--model-dir requires --method semantic")
+        if args.method not in {"semantic", "hybrid"}:
+            parser.error("--model-dir requires --method semantic or hybrid")
         options["model_dir"] = args.model_dir
     try:
         index = create_index(args.method, load_corpus(args.corpus), **options)

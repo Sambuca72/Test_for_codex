@@ -129,6 +129,36 @@ class MiniLMTests(unittest.TestCase):
         self.assertIn("missing or invalid model asset", result.stderr)
         self.assertIn("prepare-model", result.stderr)
 
+    def test_hybrid_top_10_matches_full_ranking_on_dev(self):
+        documents = load_corpus()
+        index = create_index(
+            "hybrid", documents, model_dir=self.model_dir, k1=0.6, b=0.75,
+            lexical_weight=0.25, rrf_k=10,
+        )
+        for query in load_queries(split="dev"):
+            with self.subTest(query=query.id):
+                ranking = index.search(query.text, k=len(documents))
+                self.assertEqual(len(ranking), len(documents))
+                self.assertEqual(index.search(query.text, k=10), ranking[:10])
+
+    def test_hybrid_cli_forwards_options_and_returns_expected_scores(self):
+        documents = load_corpus()
+        index = create_index(
+            "hybrid", documents, model_dir=self.model_dir, k1=0.6, b=0.75,
+            lexical_weight=0.4, rrf_k=60,
+        )
+        query = "How do I stop my bread from going stale?"
+        command = [
+            sys.executable, "-m", "semantic_search", "search", "--json", "--method",
+            "hybrid", "--model-dir", str(self.model_dir), "--top-k", "3", "--k1",
+            "0.6", "--b", "0.75", "--lexical-weight", "0.4", "--rrf-k", "60", query,
+        ]
+        expected = index.search(query, k=3)
+        output = json.loads(subprocess.check_output(command, text=True))
+        self.assertEqual([item["id"] for item in output], [item.document.id for item in expected])
+        for observed, result in zip(output, expected):
+            self.assertAlmostEqual(observed["score"], result.score, places=12)
+
 
 if __name__ == "__main__":
     unittest.main()
