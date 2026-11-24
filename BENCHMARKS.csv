@@ -1,0 +1,2 @@
+iteration,phase,split,method,options,documents,queries,warmup_passes,timed_passes,precision_at_10,recall_at_10,mrr,mean_search_ms,peak_rss_mib
+1,checkpoint,dev,tfidf,{},60,10,1,20,0.20000000,0.81666667,0.83333333,0.025529,13.750000

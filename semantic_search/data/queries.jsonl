@@ -1,0 +1,30 @@
+{"id": "d01", "split": "dev", "kind": "direct", "text": "Which solar installations let a household produce electricity or earn electricity bill credits?", "relevant_ids": ["s01", "s02"]}
+{"id": "d02", "split": "dev", "kind": "paraphrase", "text": "How do I keep a loaf soft for longer?", "relevant_ids": ["a03", "a06"]}
+{"id": "d03", "split": "dev", "kind": "contrast", "text": "What allows recovery after I mistakenly erase a file or a spreadsheet?", "relevant_ids": ["b02", "b05"]}
+{"id": "d04", "split": "dev", "kind": "direct", "text": "How do I investigate a brake pad rubbing on a bicycle wheel?", "relevant_ids": ["c02", "c03", "c06"]}
+{"id": "d05", "split": "dev", "kind": "paraphrase", "text": "Planting choices to keep insects fed across the growing season", "relevant_ids": ["d01", "d06"]}
+{"id": "d06", "split": "dev", "kind": "contrast", "text": "How do I take out novels from the library without going to a building?", "relevant_ids": ["f01", "f04", "f06"]}
+{"id": "d07", "split": "dev", "kind": "direct", "text": "How can I avoid being overcharged after hitting the daily transit fare cap?", "relevant_ids": ["g02", "g06"]}
+{"id": "d08", "split": "dev", "kind": "paraphrase", "text": "Keeping the water that falls on a roof until the next dry spell", "relevant_ids": ["h01", "h02", "h06"]}
+{"id": "d09", "split": "dev", "kind": "contrast", "text": "Safer sign-in credentials that cannot be harvested by lookalike websites", "relevant_ids": ["i02", "i04"]}
+{"id": "d10", "split": "dev", "kind": "direct", "text": "What conditions should I change close to bedtime to get to sleep more easily?", "relevant_ids": ["e01", "e04", "e06"]}
+{"id": "t01", "split": "test", "kind": "contrast", "text": "I want to use sunlight to warm my showers and cut gas use. What should go on the roof?", "relevant_ids": ["s03"]}
+{"id": "t02", "split": "test", "kind": "paraphrase", "text": "Could excess power produced at noon be used after dark?", "relevant_ids": ["s01", "s04"]}
+{"id": "t03", "split": "test", "kind": "contrast", "text": "Keep yesterday's cooked grains for future meals without getting sick", "relevant_ids": ["a02", "a05"]}
+{"id": "t04", "split": "test", "kind": "direct", "text": "Which freezer is likely to keep groceries frozen during a short power outage?", "relevant_ids": ["a04"]}
+{"id": "t05", "split": "test", "kind": "contrast", "text": "Where should I keep the secret needed to decrypt a saved computer archive or drive?", "relevant_ids": ["b01", "b03"]}
+{"id": "t06", "split": "test", "kind": "direct", "text": "Where should I keep copies of important data so that a household device failure does not destroy every copy?", "relevant_ids": ["b04"]}
+{"id": "t07", "split": "test", "kind": "paraphrase", "text": "Inspection for a gritty feeling and looseness at the center of a bike's spinning parts", "relevant_ids": ["c01", "c04"]}
+{"id": "t08", "split": "test", "kind": "contrast", "text": "How do I recognize when bicycle rim pads are too worn or damaged to keep using?", "relevant_ids": ["c02"]}
+{"id": "t09", "split": "test", "kind": "direct", "text": "Where can renters get vegetable plots with shared composting and irrigation tools?", "relevant_ids": ["d05"]}
+{"id": "t10", "split": "test", "kind": "paraphrase", "text": "How can I make parts of my yard into homes for insects that live alone?", "relevant_ids": ["d02"]}
+{"id": "t11", "split": "test", "kind": "contrast", "text": "How can timed brightness help recalibrate my internal clock after flights or rotating work schedules?", "relevant_ids": ["e02", "e05"]}
+{"id": "t12", "split": "test", "kind": "paraphrase", "text": "How do I escape artificial glare and give my eyes time to see fainter objects overhead?", "relevant_ids": ["e03"]}
+{"id": "t13", "split": "test", "kind": "direct", "text": "Where can I borrow a drill using a membership instead of buying one?", "relevant_ids": ["f02"]}
+{"id": "t14", "split": "test", "kind": "contrast", "text": "Which dedicated public library services offer reading material to someone who cannot see the printed pages?", "relevant_ids": ["f04"]}
+{"id": "t15", "split": "test", "kind": "paraphrase", "text": "How do frequent bus or rail riders limit what they spend on trips?", "relevant_ids": ["g01", "g02"]}
+{"id": "t16", "split": "test", "kind": "contrast", "text": "My city travel pass covers ordinary trains. Why might I still be charged for the ride to my flight?", "relevant_ids": ["g05"]}
+{"id": "t17", "split": "test", "kind": "direct", "text": "Can I irrigate ornamental plants with household wash water and what restrictions apply?", "relevant_ids": ["h04"]}
+{"id": "t18", "split": "test", "kind": "contrast", "text": "How to route storm water away from the house to prevent seepage or safely soak it into the yard?", "relevant_ids": ["h03", "h05"]}
+{"id": "t19", "split": "test", "kind": "paraphrase", "text": "A message asks me to open its link and type my account secret. How can I check that the sign-in page is genuine?", "relevant_ids": ["i03"]}
+{"id": "t20", "split": "test", "kind": "direct", "text": "What preparations prevent losing access to an encrypted password manager?", "relevant_ids": ["i01", "i06"]}
