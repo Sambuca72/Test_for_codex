@@ -15,3 +15,13 @@ Researcher подтвердил доступ к GitHub. Корпус и разм
 - Researcher рассмотрел SciFact как небольшой внешний корпус. Разметка распространяется по CC BY 4.0, аннотации статей из S2ORC по ODC-By 1.0, код по Apache-2.0. SciFact в эксперименты не включён. [Условия SciFact](https://github.com/allenai/scifact/blob/master/LICENSE.md), [статья](https://aclanthology.org/2020.emnlp-main.609/)
 - Researcher скачал обе модели в диагностический временный каталог. Размер файла ONNX MiniLM AVX2 составил 23 046 789 байт. Хеш весов Potion 4M совпал с указанным в хранилище модели.
 - Researcher провёл пробный инференс MiniLM через CPUExecutionProvider в изолированном окружении с Python 3.12. Проверены маскированное усреднение и 384-мерный вектор. [ONNX Runtime, MIT](https://github.com/microsoft/onnxruntime), [Tokenizers, Apache-2.0](https://github.com/huggingface/tokenizers/blob/main/LICENSE)
+
+## Итерация 2. BM25
+
+| Источник | Решение для проекта | Лицензия |
+| --- | --- | --- |
+| [Apache Lucene BM25Similarity](https://github.com/apache/lucene/blob/main/lucene/core/src/java/org/apache/lucene/search/similarities/BM25Similarity.java) | Положительный `log1p((N - df + 0.5) / (df + 0.5))`, опорные `k1=1.2`, `b=0.75`; проверен учёт повторов терма в запросе. | [Apache-2.0](https://github.com/apache/lucene/blob/main/LICENSE.txt) |
+| [rank_bm25](https://github.com/dorianbrown/rank_bm25/blob/master/rank_bm25.py) | Сравнили вариант с обработкой отрицательного IDF и параметрами 1.5/0.75. | [Apache-2.0](https://github.com/dorianbrown/rank_bm25/blob/master/LICENSE) |
+| [BM25S](https://github.com/xhluca/bm25s/blob/main/bm25s/scoring.py), [статья](https://arxiv.org/abs/2407.03618) | Сравнили разреженный расчёт по postings и предвычисление вклада документа. | [MIT](https://github.com/xhluca/bm25s/blob/main/LICENSE) |
+
+Researcher сопоставил варианты с [обзором Robertson и Zaragoza](https://doi.org/10.1561/1500000019) и [сравнением формул BM25](https://cs.uwaterloo.ca/~jimmylin/publications/Kamphuis_etal_ECIR2020_preprint.pdf). Для TF-IDF и BM25 применяем одинаковую токенизацию к запросу и объединённому полю заголовка и текста. [Stanford IR book](https://nlp.stanford.edu/IR-book/html/htmledition/tokenization-1.html)

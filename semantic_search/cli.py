@@ -20,13 +20,18 @@ def main(argv: list[str] | None = None) -> int:
     search = commands.add_parser("search", help="rank documents for a query")
     search.add_argument("query", help="search text")
     search.add_argument("--method", choices=METHODS, default="tfidf")
+    search.add_argument("--k1", type=float, help="BM25 term-frequency saturation (default: 1.2)")
+    search.add_argument("--b", type=float, help="BM25 length normalization (default: 0.75)")
     search.add_argument("--corpus", help="path to a JSONL corpus; defaults to the bundled data")
     search.add_argument("--top-k", type=_positive_int, default=10, help="maximum number of results")
     search.add_argument("--json", action="store_true", help="emit the result list as JSON")
     args = parser.parse_args(argv)
 
+    options = {name: value for name, value in {"k1": args.k1, "b": args.b}.items() if value is not None}
+    if options and args.method != "bm25":
+        parser.error("--k1 and --b require --method bm25")
     try:
-        index = create_index(args.method, load_corpus(args.corpus))
+        index = create_index(args.method, load_corpus(args.corpus), **options)
         results = index.search(args.query, k=args.top_k)
     except (OSError, ValueError) as error:
         parser.error(str(error))

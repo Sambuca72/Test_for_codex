@@ -83,13 +83,77 @@ class TfIdfTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "ids must be unique"):
             create_index("tfidf", (document, document))
 
+
+class BM25Tests(unittest.TestCase):
+    def test_score_matches_idf_saturation_and_length_normalization(self):
+        corpus = (
+            Document("a", "apple", "apple pear"),
+            Document("b", "apple", "pear pear pear pear"),
+            Document("c", "pear", "pear pear pear"),
+        )
+        k1, b = 1.8, 0.25
+        index = create_index("bm25", corpus, k1=k1, b=b)
+        ranking = index.search("APPLE unknown")
+        idf = math.log(1 + (3 - 2 + 0.5) / (2 + 0.5))
+        average_length = (3 + 5 + 4) / 3
+        self.assertEqual(result_ids(ranking), ["a", "b"])
+        for result, frequency, length in zip(ranking, (2, 1), (3, 5)):
+            length_norm = 1 - b + b * length / average_length
+            expected = idf * frequency * (k1 + 1) / (frequency + k1 * length_norm)
+            self.assertAlmostEqual(result.score, expected, places=12)
+
+    def test_repeated_query_term_has_linear_weight(self):
+        corpus = (Document("a", "Apple", "Fruits"), Document("b", "Apple", "Apple pie"))
+        index = create_index("bm25", corpus)
+        single = index.search("apple")
+        repeated = index.search("APPLE apple")
+        self.assertEqual(result_ids(repeated), result_ids(single))
+        for original, doubled in zip(single, repeated):
+            self.assertAlmostEqual(doubled.score, 2 * original.score, places=12)
+
+    def test_parameter_endpoints_and_large_k1(self):
+        corpus = (
+            Document("a", "apple", "apple filler filler filler"),
+            Document("z", "apple", ""),
+        )
+        no_saturation = create_index("bm25", corpus, b=1, k1=0).search("apple")
+        self.assertEqual(result_ids(no_saturation), ["a", "z"])
+        self.assertEqual(no_saturation[0].score, no_saturation[1].score)
+        no_length_norm = create_index("bm25", corpus, b=0).search("apple")
+        self.assertEqual(result_ids(no_length_norm), ["a", "z"])
+
+        full_length_norm = create_index("bm25", corpus, b=1, k1=1e308).search("apple")
+        self.assertEqual(result_ids(full_length_norm), ["z", "a"])
+        idf = math.log(1 + 0.5 / 2.5)
+        self.assertAlmostEqual(full_length_norm[0].score, idf * 3, places=12)
+        self.assertAlmostEqual(full_length_norm[1].score, idf * 2 * 3 / 5, places=12)
+
+    def test_invalid_parameters_are_rejected(self):
+        for name, values in (
+            ("k1", (-1, math.inf, -math.inf, math.nan)),
+            ("b", (-0.01, 1.01, math.inf, -math.inf, math.nan)),
+        ):
+            for value in values:
+                with self.subTest(parameter=name, value=value):
+                    with self.assertRaisesRegex(ValueError, name):
+                        create_index("bm25", (), **{name: value})
+
+    def test_empty_corpus_and_empty_tokenized_document(self):
+        self.assertEqual(create_index("bm25", ()).search("apple"), [])
+        self.assertEqual(create_index("bm25", (Document("a", "...", ""),)).search("apple"), [])
+
+
+class RankingTests(unittest.TestCase):
     def test_bundled_dev_top_10_is_prefix_of_full_ranking(self):
         documents = load_corpus()
-        index = create_index("tfidf", documents)
-        for query in load_queries(split="dev"):
-            with self.subTest(query=query.id):
-                ranking = index.search(query.text, k=len(documents))
-                self.assertEqual(index.search(query.text, k=10), ranking[:10])
+        queries = load_queries(split="dev")
+        configs = (("tfidf", {}), ("bm25", {}), ("bm25", {"k1": 0.6, "b": 0.75}))
+        for method, options in configs:
+            index = create_index(method, documents, **options)
+            for query in queries:
+                with self.subTest(method=method, options=options, query=query.id):
+                    ranking = index.search(query.text, k=len(documents))
+                    self.assertEqual(index.search(query.text, k=10), ranking[:10])
 
 
 class CliTests(unittest.TestCase):
@@ -109,6 +173,24 @@ class CliTests(unittest.TestCase):
         result, = output
         self.assertEqual((result["id"], result["title"]), ("b", "Cycling"))
         self.assertGreater(result["score"], 0)
+
+    def test_bm25_cli_uses_options(self):
+        text = "bicycle brake pads"
+        command = [
+            sys.executable, "-m", "semantic_search", "search", "--json", "--method",
+            "bm25", "--k1", "0", "--b", "1", "--top-k", "3", text,
+        ]
+        observed = json.loads(subprocess.check_output(command, text=True))
+        index = create_index("bm25", load_corpus(), k1=0, b=1)
+        expected = index.search(text, k=3)
+        self.assertEqual([item["id"] for item in observed], result_ids(expected))
+        self.assertEqual([item["score"] for item in observed], [item.score for item in expected])
+
+    def test_tf_idf_cli_rejects_bm25_options(self):
+        command = [sys.executable, "-m", "semantic_search", "search", "--b", "0", "brake"]
+        result = subprocess.run(command, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("require --method bm25", result.stderr)
 
 
 class MetricTests(unittest.TestCase):

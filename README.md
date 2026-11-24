@@ -8,6 +8,7 @@
 
 ```bash
 python -m semantic_search search --method tfidf --top-k 5 "how to prevent soil erosion"
+python -m semantic_search search --method bm25 --top-k 5 "how to prevent soil erosion"
 ```
 
 Параметр `--json` возвращает список объектов с полями `id`, `title` и `score`. Чтобы искать по собственному корпусу, передайте путь через `--corpus documents.jsonl`. Каждая строка файла содержит один JSON-объект в UTF-8, например:
@@ -16,7 +17,7 @@ python -m semantic_search search --method tfidf --top-k 5 "how to prevent soil e
 {"id":"soil-001","title":"Cover crops","text":"Cover crops protect soil against erosion during heavy rain."}
 ```
 
-Идентификаторы документов уникальны. Поиск индексирует заголовок и текст. Оценки разных методов имеют разные шкалы.
+Идентификаторы документов уникальны. Поиск индексирует заголовок и текст. Оценки разных методов имеют разные шкалы. В BM25 можно задать `--k1` для насыщения частоты терма и `--b` для нормализации длины.
 
 ## Данные
 
