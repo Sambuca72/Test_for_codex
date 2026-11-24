@@ -25,3 +25,10 @@ Researcher подтвердил доступ к GitHub. Корпус и разм
 | [BM25S](https://github.com/xhluca/bm25s/blob/main/bm25s/scoring.py), [статья](https://arxiv.org/abs/2407.03618) | Сравнили разреженный расчёт по postings и предвычисление вклада документа. | [MIT](https://github.com/xhluca/bm25s/blob/main/LICENSE) |
 
 Researcher сопоставил варианты с [обзором Robertson и Zaragoza](https://doi.org/10.1561/1500000019) и [сравнением формул BM25](https://cs.uwaterloo.ca/~jimmylin/publications/Kamphuis_etal_ECIR2020_preprint.pdf). Для TF-IDF и BM25 применяем одинаковую токенизацию к запросу и объединённому полю заголовка и текста. [Stanford IR book](https://nlp.stanford.edu/IR-book/html/htmledition/tokenization-1.html)
+
+## Итерация 3. Энкодер CPU
+
+- В закреплённой конфигурации MiniLM длина входа ограничена 256 токенами. Модель использует uncased WordPiece, маскированное среднее и L2-нормализацию выходного 384-мерного вектора. [Длина](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/blob/855bcf54d21334332f75db10bdd48970ff0ef547/sentence_bert_config.json), [пул](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/blob/855bcf54d21334332f75db10bdd48970ff0ef547/1_Pooling/config.json), [модули](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/blob/855bcf54d21334332f75db10bdd48970ff0ef547/modules.json)
+- Рекомендации по CPU и квантованию сверены с документацией Sentence Transformers. Граф ONNX выдаёт состояния токенов, поэтому пул и нормализация выполняются в Python. [Документация](https://www.sbert.net/docs/sentence_transformer/usage/efficiency.html)
+- Researcher повторно запустил квантованный CPU-граф на диагностических фразах. При повторении того же батча результаты совпали, при переходе от батча к одиночному входу немного менялись. Порядок документов и размер батча фиксируем в эксперименте.
+- Официальные файлы успешно получены по HTTPS через `/resolve/` закреплённой ревизии. Код проверяет размер и SHA-256 до установки файла в кэш, а затем повторно проверяет артефакты при чтении. [Закреплённые файлы](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/tree/855bcf54d21334332f75db10bdd48970ff0ef547)

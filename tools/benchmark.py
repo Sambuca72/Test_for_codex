@@ -16,6 +16,7 @@ from statistics import fmean
 from time import perf_counter_ns
 
 from semantic_search import METHODS, create_index, load_corpus, load_queries
+from semantic_search.model import ModelError
 
 
 K = 10
@@ -140,7 +141,7 @@ def main():
         if not configs:
             parser.error("supply at least one --method or --run")
         rows = [run_isolated(config, args) for config in configs]
-    except (OSError, TypeError, ValueError, subprocess.CalledProcessError) as error:
+    except (OSError, TypeError, ValueError, ModelError, subprocess.CalledProcessError) as error:
         parser.error(str(error))
 
     writer = csv.DictWriter(sys.stdout, FIELDS, lineterminator="\n")

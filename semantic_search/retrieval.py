@@ -1,16 +1,17 @@
 """Search indexes and shared ranking primitives."""
 
 import math
+import os
 import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from heapq import nsmallest
-from typing import Iterable, Mapping, Protocol
+from typing import Iterable, Protocol
 
 from .dataset import Document
 
 
-METHODS = ("tfidf", "bm25")
+METHODS = ("tfidf", "bm25", "semantic")
 _TOKEN_PATTERN = re.compile(r"[^\W_]+(?:'[^\W_]+)*")
 
 
@@ -29,10 +30,10 @@ def tokenize(text: str) -> list[str]:
 
 
 def _rank(
-    documents: tuple[Document, ...], scores: Mapping[int, float], k: int
+    documents: tuple[Document, ...], scores: Iterable[tuple[int, float]], k: int
 ) -> list[SearchResult]:
-    ranked = nsmallest(k, scores, key=lambda position: (-scores[position], documents[position].id))
-    return [SearchResult(documents[position], scores[position]) for position in ranked]
+    ranked = nsmallest(k, scores, key=lambda item: (-item[1], documents[item[0]].id))
+    return [SearchResult(documents[position], score) for position, score in ranked]
 
 
 def _term_counts(
@@ -70,7 +71,7 @@ class TfIdfIndex:
         for term, query_weight in self._weights(Counter(tokenize(query))).items():
             for position, document_weight in self.postings[term]:
                 scores[position] += query_weight * document_weight
-        return _rank(self.documents, scores, k)
+        return _rank(self.documents, scores.items(), k)
 
 
 class BM25Index:
@@ -108,7 +109,7 @@ class BM25Index:
         for term, query_count in Counter(tokenize(query)).items():
             for position, weight in self.postings.get(term, ()):
                 scores[position] += query_count * weight
-        return _rank(self.documents, scores, k)
+        return _rank(self.documents, scores.items(), k)
 
 
 def create_index(method: str, documents: Iterable[Document], **options) -> SearchIndex:
@@ -120,4 +121,15 @@ def create_index(method: str, documents: Iterable[Document], **options) -> Searc
         raise ValueError("document ids must be unique")
     if method == "tfidf":
         return TfIdfIndex(corpus, **options)
-    return BM25Index(corpus, **options)
+    if method == "bm25":
+        return BM25Index(corpus, **options)
+
+    from .model import ModelError
+
+    # Newer ONNX Runtime builds read their telemetry opt-out at import time.
+    os.environ.setdefault("ORT_DISABLE_TELEMETRY", "1")
+    try:
+        from .semantic import SemanticIndex
+    except ImportError as error:
+        raise ModelError("semantic search requires `python -m pip install '.[semantic]'`") from error
+    return SemanticIndex(corpus, **options)

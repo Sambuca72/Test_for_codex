@@ -166,7 +166,7 @@ class CliTests(unittest.TestCase):
             ]
             path.write_text("".join(json.dumps(doc) + "\n" for doc in docs), encoding="utf-8")
             command = [
-                sys.executable, "-m", "semantic_search", "search", "--corpus", str(path),
+                sys.executable, "-S", "-m", "semantic_search", "search", "--corpus", str(path),
                 "--method", "tfidf", "--top-k", "1", "--json", "derailleur",
             ]
             output = json.loads(subprocess.check_output(command, text=True))
