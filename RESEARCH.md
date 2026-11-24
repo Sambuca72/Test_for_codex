@@ -42,3 +42,5 @@ Researcher сопоставил варианты с [обзором Robertson и
 | [LangChain EnsembleRetriever](https://github.com/langchain-ai/langchain/blob/master/libs/langchain/langchain_classic/retrievers/ensemble.py) | Сверены взвешенная формула, отсутствие вклада вне списка и сопоставление документов по стабильному идентификатору. | [MIT](https://github.com/langchain-ai/langchain/blob/master/LICENSE) |
 
 Researcher также сверил трактовку весов и глубины выдачи с документацией Elasticsearch. В проекте глубина компонентных рейтингов одинакова для любого запрошенного `k`, поэтому top-k является префиксом полного ранжирования. [Документация RRF](https://www.elastic.co/docs/reference/elasticsearch/rest-apis/reciprocal-rank-fusion), [взвешенный вариант](https://www.elastic.co/docs/reference/elasticsearch/rest-apis/retrievers/rrf-retriever)
+
+Итоговое сравнение подтверждает поведение взвешенного RRF на проектном корпусе. При выбранных настройках гибрид совпал с MiniLM по трём метрикам качества. [Экспериментальные результаты](REPORT.md)

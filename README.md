@@ -64,10 +64,10 @@ SEMANTIC_TEST_MODEL_DIR="$(python -m semantic_search prepare-model)" python -m u
 python -m tools.benchmark --split test --warmup 1 --repeat 20 \
   --method tfidf \
   --run '{"method":"bm25","options":{"k1":0.6,"b":0.75}}' \
-  --run '{"method":"semantic"}' \
+  --method semantic \
   --run '{"method":"hybrid","options":{"k1":0.6,"b":0.75,"lexical_weight":0.25,"rrf_k":10}}'
 ```
 
-Итоговый прогон использовал Python 3.12.14, NumPy 2.3.5, ONNX Runtime 1.32.0 и Tokenizers 0.23.3. Для совпадения версий можно указать `numpy==2.3.5 onnxruntime==1.32.0 tokenizers==0.23.3` при установке. Для контрольного прогона замените `--split test` на `--split dev`. Для повторения сеток используйте значения из [плана](PLAN.md) и передайте каждый вариант отдельным аргументом `--run`.
+Итоговый прогон использовал Python 3.12.14, NumPy 2.3.5, ONNX Runtime 1.32.0 и Tokenizers 0.23.3. Для совпадения версий можно указать `numpy==2.3.5 onnxruntime==1.32.0 tokenizers==0.23.3` при установке. Для контрольного прогона замените `--split test` на `--split dev`. Для повторения сеток используйте значения из `PLAN.md` и передайте каждый вариант отдельным аргументом `--run`.
 
 [Сравнительный отчёт](REPORT.md) · [CSV замеров](BENCHMARKS.csv) · [Источники и лицензии](RESEARCH.md) · [Журнал взаимодействия агентов](AGENT_LOG.md) · [Контрольные точки](PROGRESS.md)

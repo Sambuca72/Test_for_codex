@@ -26,3 +26,7 @@ iteration,phase,split,method,options,documents,queries,warmup_passes,timed_passe
 4,checkpoint,dev,bm25,"{""b"":0.75,""k1"":0.6}",60,10,1,20,0.20000000,0.81666667,0.83333333,0.025266,16.597656,proc_status_vmhwm
 4,checkpoint,dev,semantic,{},60,10,1,20,0.24000000,1.00000000,1.00000000,3.317880,126.414062,proc_status_vmhwm
 4,checkpoint,dev,hybrid,"{""b"":0.75,""k1"":0.6,""lexical_weight"":0.25,""rrf_k"":10}",60,10,1,20,0.24000000,1.00000000,1.00000000,3.458238,129.593750,proc_status_vmhwm
+4,heldout,test,tfidf,{},60,20,1,20,0.11000000,0.82500000,0.71140110,0.031674,16.597656,proc_status_vmhwm
+4,heldout,test,semantic,{},60,20,1,20,0.14000000,1.00000000,0.92500000,4.045271,128.621094,proc_status_vmhwm
+4,heldout,test,bm25,"{""b"":0.75,""k1"":0.6}",60,20,1,20,0.12000000,0.87500000,0.75276515,0.028871,16.597656,proc_status_vmhwm
+4,heldout,test,hybrid,"{""b"":0.75,""k1"":0.6,""lexical_weight"":0.25,""rrf_k"":10}",60,20,1,20,0.14000000,1.00000000,0.92500000,4.722481,129.007812,proc_status_vmhwm
